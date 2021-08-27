@@ -12,3 +12,7 @@ pip install stanfordnlp\
 pip install gieba\
 pip install tensorflow_hub==0.3.0\
 pip install keras==2.2.5
+
+3. 실행
+
+srun1 python run_bert_coqa.py
