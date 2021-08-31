@@ -13,11 +13,12 @@ from sogou_mrc.libraries import optimization
 import keras
 VERY_NEGATIVE_NUMBER = -1e29
 class CharacterBert(BaseModel):
-    def __init__(self, C = 1, N=2, vocab=None, bert_dir='', answer_verification=True):
+    def __init__(self, C = 1, N=2, story_clusters = None, vocab=None, bert_dir='', answer_verification=True):
         super(CharacterBert, self).__init__(vocab)
         self.bert_dir = bert_dir
         self.activation = 'relu'
         self.answer_verification = answer_verification
+        self.story_clusters = story_clusters
         self.beta = 100
         self.n_layers = N
         self.coeff = C
@@ -160,7 +161,6 @@ class CharacterBert(BaseModel):
     def train_and_evaluate_character(self, ratio, train_generator, eval_generator, evaluator, epochs=1, eposides=1,
                            save_dir=None, summary_dir=None, save_summary_steps=10):
         if not self.initialized:
-           #printf('sex')
             self.bert_embedding.init_bert()
             self.session.run(tf.global_variables_initializer())
 

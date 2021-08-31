@@ -9,7 +9,7 @@ import re
 import string
 # from coqa_official_evaluate import CoQAEvaluator
 import time
-
+from allennlp.predictors.predictor import Predictor
 
 class CoQAReader(BaseReader):
     def __init__(self, history, question_sep="<q>", answer_sep="<a>"):
@@ -17,6 +17,7 @@ class CoQAReader(BaseReader):
         self.history = history  # prepend dialog history. -1 represent all previous dialog
         self.question_sep = question_sep
         self.answer_sep = answer_sep
+        self.predictor = Predictor.from_path('https://storage.googleapis.com/allennlp-public-models/coref-spanbert-large-2021.03.10.tar.gz')  # load the model
 
     def read(self, file_path, data_type):
         if data_type not in ["train", "dev", "test"]:
@@ -24,10 +25,10 @@ class CoQAReader(BaseReader):
         logging.info("Reading file at %s", file_path)
         logging.info("Processing the dataset.")
         t0 = time.time()
-        instances = self._read(file_path, data_type)
+        instances, story_clusters = self._read(file_path, data_type)
         cost = time.time() - t0
         logging.info("cost=%.3f" % cost)
-        return instances
+        return instances, story_clusters
 
     def _read(self, source, data_type):
         with open(source, 'r', encoding='utf-8') as f:
@@ -44,11 +45,14 @@ class CoQAReader(BaseReader):
             for answer in dialog["answers"]:
                 answers.append(answer["input_text"])
             indexs.append(indexs[-1] + len(dialog["questions"]))
-
         all_story_tokens, all_story_token_spans = self.tokenizer.word_tokenizer_parallel(storys)
         all_question_tokens, _ = self.tokenizer.word_tokenizer_parallel(questions)
         all_answer_tokens, _ = self.tokenizer.word_tokenizer_parallel(answers)
 
+        story_clusters = []
+        for i in tqdm(range(len(storys))):
+            prediction = self.predictor.predict(document=storys[i])
+            story_clusters.append(prediction['clusters'])
         i = 0
         instances = []
         for dialog, story_tokens, story_token_spans in tqdm(
@@ -61,7 +65,7 @@ class CoQAReader(BaseReader):
                                  all_answer_tokens[s:e], data_type)
             i += 1
 
-        return instances
+        return instances, story_clusters
 
     def process_dialog(self, dialog, story_tokens, story_token_spans, answer_tokens):
         story = dialog["story"]
