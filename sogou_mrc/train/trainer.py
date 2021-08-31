@@ -110,11 +110,9 @@ class Trainer(object):
                #     input_ids[t] = 103
             
             #print(l2)
-            #print('sex')
             train_batch["token_isperson"] = input_ents
             #train_batch["input_sim_matrix"] = input_sim_matrix[i]
             #print(i, input_sim_matrix[i][:10])
-            #print('sex')
             #print(len(input_sim_matrix[i]))
             #print(train_batch["input_ids"][0])
             #print('hahahahahahahahahahahahahahahahahahahahahahaha')
